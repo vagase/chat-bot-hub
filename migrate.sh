@@ -12,6 +12,11 @@ DB_PATH="mysql://$DB_USER:$DB_PASSWORD@tcp($DB_ALIAS)/$DB_NAME"
 # DB_PATH="mysql://$TESTDBPATH"
 # LOCALNETWORK="host"
 
+function catch_ctrl_c() {
+    # do nothing
+    echo
+}
+
 case $1 in
 init*)
     datapath=$2 && \
@@ -22,12 +27,15 @@ init*)
 	read -p "db_user: " db_user && \
 	read -s -p "db_password: " db_password && \
 	echo "" && \
-	echo -e "DB_NAME=$db_name\nDB_USER=$db_user\nDB_PASSWORD=$db_password\nALIAS=$DB_ALIAS" > mysql.env && \
+	echo -e "DB_NAME=$db_name\nDB_USER=$db_user\nDB_PASSWORD=$db_password\nDB_ALIAS=$DB_ALIAS" > mysql.env && \
 	docker volume create --driver local \
 	       --opt type=none \
 	       --opt device=$datapath \
 	       --opt o=bind \
-	       chatbothub-mysql && \
+	       chatbothub-mysql
+
+    trap catch_ctrl_c INT
+
 	docker run --rm -d \
 	       --name chatbothub_mysql_init \
 	       -e MYSQL_ROOT_PASSWORD=$rootpass \
@@ -35,9 +43,14 @@ init*)
 	       -e MYSQL_USER=$db_user \
 	       -e MYSQL_PASSWORD=$db_password \
 	       -v chatbothub-mysql:/var/lib/mysql \
-	       mysql:8.0 \
+	       mysql:8.0.13 \
 	       --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci && \
 	docker logs -f --tail 100 chatbothub_mysql_init
+
+	# unset trap
+	trap - INT
+
+    echo "> stop docker container: chatbothub_mysql_init"
     docker stop chatbothub_mysql_init
     ;;
 

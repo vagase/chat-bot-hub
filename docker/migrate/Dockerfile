@@ -7,6 +7,8 @@ RUN cat /etc/apk/repositories
 
 RUN apk add --no-cache --update 'su-exec>=0.2'
 
-COPY docker-entrypoint.sh /usr/local/bin/
-ENTRYPOINT ["docker-entrypoint.sh"]
-CMD ["--help"]
+# commet temporarily, because it will cause compatibility issues on Mac docker.
+
+#COPY docker-entrypoint.sh /usr/local/bin/
+#ENTRYPOINT ["docker-entrypoint.sh"]
+#CMD ["--help"]
