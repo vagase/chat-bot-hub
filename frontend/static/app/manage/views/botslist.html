@@ -3,11 +3,11 @@
 
 <div class="row">
   <div class="col-xs-12 col-md-12">    
-    <div class="col-md-3">
-      <button class="btn green" ng-click="createBot()">新建机器人</button>
+    <div class="col-xs-2 col-md-1">
+      <button class="btn green col-md-12" ng-click="createBot()">新建机器人</button>
     </div>
-    <div class="col-md-3">
-      <button class="btn green" ng-click="scanWechatBot()">微信扫码新建</button>
+    <div class="col-xs-2 col-md-1">
+      <button class="btn green col-md-12" ng-click="scanWechatBot()">微信扫码新建</button>
     </div>
   </div>
 </div>
@@ -140,13 +140,20 @@
 	<select id="select_type" name="select_type" ng-model="data.actionType" required>
 	  <option value="">选择消息类型</option>
 	  <option value="SendTextMessage">文本消息</option>
+	  <option value="SendAppMessage">应用卡片</option>
+          <option value="SearchContact">搜索用户</option>
+          <option value="AddContact">加好友</option>
 	  <option value="AcceptUser">通过好友申请</option>
-	  <option value="AddContact">加好友</option>
-	  <option value="SayHello">欢迎语</option>
+	  <option value="SayHello">欢迎语</option>          
+	  <option value="DeleteContact">删除好友</option>
 	  <option value="CreateRoom">建群</option>
+	  <option value="GetRoomMembers">获取群成员</option>
 	  <option value="AddRoomMember">加好友进群</option>
 	  <option value="InviteRoomMember">邀请好友进群</option>
 	  <option value="DeleteRoomMember">踢出群成员</option>
+	  <option value="SetRoomName">设置群名称</option>
+          <option value="GetRoomQRCode">获取群二维码</option>
+	  <option value="SetRoomAnnouncement">发布群通知</option>
 	</select>
       </div>
     </div>
@@ -240,6 +247,20 @@
       <div class="col-md-6">
 	<label for="text_login" class="col-md-3 control-label">帐号</label>
 	<input id="text_login" name="text_login" type="text" class="col-md-9" ng-model="data.login" readonly />
+      </div>
+    </div>
+
+    <div class="row form-group-padding">
+      <div class="col-md-6">
+	<label for="text_filterId" class="col-md-3 control-label">过滤器</label>
+	<input id="text_filterId" name="text_filterId" type="text" class="col-md-9" ng-model="data.filterId" />
+      </div>
+    </div>
+
+    <div class="row form-group-padding">
+      <div class="col-md-6">
+	<label for="text_wxaappid" class="col-md-3 control-label">APPID</label>
+	<input id="text_wxaappid" name="text_wxaappid" type="text" class="col-md-9" ng-model="data.wxaappId" />
       </div>
     </div>
 

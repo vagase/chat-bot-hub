@@ -7,13 +7,25 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
-	
-	"github.com/google/uuid"
+
 	"github.com/fluent/fluent-logger-golang/fluent"
+
+	"github.com/hawkwithwind/chat-bot-hub/server/httpx"
 )
 
 type Filter interface {
 	Fill(string) error
+	Next(Filter) error
+}
+
+type BranchTag struct {
+	Key   string
+	Value string
+}
+
+type Router interface {
+	Filter
+	Branch(tag BranchTag, filter Filter) error
 }
 
 type BaseFilter struct {
@@ -22,10 +34,21 @@ type BaseFilter struct {
 	Type string `json:"type"`
 }
 
-func (f *BaseFilter) init(name string) string {
-	f.Id = uuid.New().String()
-	f.Name = name
-	return f.Id
+const (
+	WECHATBASEFILTER string = "WechatBaseFilter"
+	PLAINFILTER      string = "PlainFilter"
+	FLUENTFILTER     string = "FluentFilter"
+	REGEXROUTER      string = "RegexRouter"
+	KVROUTER         string = "KVRouter"
+	WEBTRIGGER       string = "WebTrigger"
+)
+
+func NewBaseFilter(filterId string, filterName string, filterType string) BaseFilter {
+	return BaseFilter{
+		Id:   filterId,
+		Name: filterName,
+		Type: filterType,
+	}
 }
 
 func (f *BaseFilter) String() string {
@@ -38,8 +61,8 @@ type WechatBaseFilter struct {
 	NextFilter Filter `json:"next"`
 }
 
-func NewWechatBaseFilter() *WechatBaseFilter {
-	return &WechatBaseFilter{BaseFilter: BaseFilter{Type: "源:微信"}}
+func NewWechatBaseFilter(filterId string, filterName string) *WechatBaseFilter {
+	return &WechatBaseFilter{BaseFilter: NewBaseFilter(filterId, filterName, "源:微信")}
 }
 
 func (f *WechatBaseFilter) String() string {
@@ -73,8 +96,8 @@ type PlainFilter struct {
 	NextFilter Filter `json:"next"`
 }
 
-func NewPlainFilter(logger *log.Logger) *PlainFilter {
-	return &PlainFilter{BaseFilter: BaseFilter{Type: "过滤:空"}, logger: logger}
+func NewPlainFilter(filterId string, filterName string, logger *log.Logger) *PlainFilter {
+	return &PlainFilter{BaseFilter: NewBaseFilter(filterId, filterName, "过滤:空"), logger: logger}
 }
 
 func (f *PlainFilter) String() string {
@@ -87,7 +110,13 @@ func (f *PlainFilter) Next(filter Filter) error {
 		return fmt.Errorf("call on empty *PlainFilter")
 	}
 	f.NextFilter = filter
-	return nil	
+	return nil
+}
+
+type WechatMsgSource struct {
+	AtUserList  string `xml:"atuserlist" json:"atUserList"`
+	Silence     int    `xml:"silence" json:"silence"`
+	MemberCount int    `xml:"membercount" json:"memberCount"`
 }
 
 func (f *PlainFilter) Fill(msg string) error {
@@ -108,37 +137,57 @@ func (f *PlainFilter) Fill(msg string) error {
 		toUser := o.FromMapString("toUser", body, "eventRequest.body", false, "")
 		groupId := o.FromMapString("groupId", body, "eventRequest.body", true, "")
 		status := int64(o.FromMapFloat("status", body, "eventRequest.body", false, 0))
-		timestamp := int64(o.FromMapFloat("timestamp", body, "eventRequest.body", false, 0))
-		tm := o.BJTimeFromUnix(timestamp)
+		//timestamp := int64(o.FromMapFloat("timestamp", body, "eventRequest.body", false, 0))
+		//tm := o.BJTimeFromUnix(timestamp)
 		mtype := int64(o.FromMapFloat("mType", body, "eventRequest.body", false, 0))
+		msgsourcexml := o.FromMapString("msgSource", body, "eventRequest.body", true, "")
+
+		if msgsourcexml != "" {
+			var msgSource WechatMsgSource
+			o.FromXML(msgsourcexml, &msgSource)
+			if o.Err != nil {
+				f.logger.Printf("err %v\n%s\n", o.Err, msgsourcexml)
+			} else {
+				body["msgSource"] = msgSource
+			}
+		}
 
 		switch content := contentptr.(type) {
 		case string:
 			brief = content
-			if len(content) > 60 {
-				brief = content[:60] + "..."
+			if len(content) > 480 {
+				brief = content[:480] + "..."
 			}
 
 			if len(groupId) > 0 {
-				f.logger.Printf("%s[%s](%d) %s [%s] %s->%s (%d) %s",
-					f.Name, f.Type, mtype, tm, groupId, fromUser, toUser, status, brief)
+				f.logger.Printf("%s[%s](%d) [%s] %s->%s (%d) %s",
+					f.Name, f.Type, mtype, groupId, fromUser, toUser, status, brief)
 			} else {
-				f.logger.Printf("%s[%s](%d) %s %s->%s (%d) %s",
-					f.Name, f.Type, mtype, tm, fromUser, toUser, status, brief)
+				f.logger.Printf("%s[%s](%d) %s->%s (%d) %s",
+					f.Name, f.Type, mtype, fromUser, toUser, status, brief)
 			}
+
 		case map[string]interface{}:
-			f.logger.Printf("%s[%s](%d) %s %s->%s (%d) appmsg: %v",
-				f.Name, f.Type, mtype, tm, fromUser, toUser, status, content)
+			var msg WechatMsg
+			o.Err = json.Unmarshal([]byte(o.ToJson(content["msg"])), &msg)
+			if len(msg.AppMsg.Title) > 0 {
+				f.logger.Printf("%s[%s](%d) %s->%s (%d) appmsg: <%s>%s",
+					f.Name, f.Type, mtype, fromUser, toUser, status, msg.AppMsg.SourceDisplayName, msg.AppMsg.Title)
+			} else if len(msg.Emoji.Attributions.FromUserName) > 0 {
+				f.logger.Printf("%s[%s](%d) %s->%s (%d) emoji: <%s>%s",
+					f.Name, f.Type, mtype, fromUser, toUser, status, msg.Emoji.Attributions.Type, msg.Emoji.Attributions.ProductId)
+			}
+
 		default:
-			f.logger.Printf("%s[%s](%d) %s %s->%s (%d) %T %v",
-				f.Name, f.Type, mtype, tm, fromUser, toUser, status, content, content)
+			f.logger.Printf("%s[%s](%d) %s->%s (%d) %T %v",
+				f.Name, f.Type, mtype, fromUser, toUser, status, content, content)
 		}
 	} else {
 		f.logger.Printf("%s[%s] %s ...", f.Name, f.Type, brief)
 	}
 
 	if f.NextFilter != nil && o.Err == nil {
-		return f.NextFilter.Fill(msg)
+		return f.NextFilter.Fill(o.ToJson(body))
 	}
 
 	return o.Err
@@ -146,13 +195,13 @@ func (f *PlainFilter) Fill(msg string) error {
 
 type FluentFilter struct {
 	BaseFilter
-	logger *fluent.Fluent
-	tag string
+	logger     *fluent.Fluent
+	tag        string
 	NextFilter Filter `json:"next"`
 }
 
-func NewFluentFilter(logger *fluent.Fluent, tag string) *FluentFilter {
-	return &FluentFilter{BaseFilter: BaseFilter{Type: "过滤:Fluent"}, logger: logger, tag: tag}
+func NewFluentFilter(filterId string, filterName string, logger *fluent.Fluent, tag string) *FluentFilter {
+	return &FluentFilter{BaseFilter: NewBaseFilter(filterId, filterName, "过滤:Fluent"), logger: logger, tag: tag}
 }
 
 func (f *FluentFilter) String() string {
@@ -165,7 +214,7 @@ func (f *FluentFilter) Next(filter Filter) error {
 		return fmt.Errorf("call on empty *FluentFilter")
 	}
 	f.NextFilter = filter
-	return nil	
+	return nil
 }
 
 func (f *FluentFilter) Fill(msg string) error {
@@ -175,7 +224,7 @@ func (f *FluentFilter) Fill(msg string) error {
 
 	o := &ErrorHandler{}
 	body := o.FromJson(msg)
-	
+
 	if o.Err == nil {
 		go func() {
 			if body != nil {
@@ -189,10 +238,9 @@ func (f *FluentFilter) Fill(msg string) error {
 	} else {
 		return o.Err
 	}
-	
+
 	return nil
 }
-
 
 type RegexRouter struct {
 	BaseFilter
@@ -201,8 +249,8 @@ type RegexRouter struct {
 	DefaultNextFilter Filter `json:"defaultNext"`
 }
 
-func NewRegexRouter() *RegexRouter {
-	return &RegexRouter{BaseFilter: BaseFilter{Type: "路由:正则"}}
+func NewRegexRouter(filterId string, filterName string) *RegexRouter {
+	return &RegexRouter{BaseFilter: NewBaseFilter(filterId, filterName, "路由:正则")}
 }
 
 func (f *RegexRouter) String() string {
@@ -210,7 +258,7 @@ func (f *RegexRouter) String() string {
 	return string(jsonstr)
 }
 
-func (f *RegexRouter) DefaultNext(filter Filter) error {
+func (f *RegexRouter) Next(filter Filter) error {
 	if f == nil {
 		return fmt.Errorf("call on empty *RegexRouter")
 	}
@@ -218,10 +266,11 @@ func (f *RegexRouter) DefaultNext(filter Filter) error {
 	return nil
 }
 
-func (f *RegexRouter) Next(regstr string, filter Filter) error {
+func (f *RegexRouter) Branch(tag BranchTag, filter Filter) error {
 	if f == nil {
 		return fmt.Errorf("call on empty *RegexRouter")
 	}
+
 	if f.NextFilter == nil {
 		f.NextFilter = make(map[string]Filter)
 	}
@@ -229,10 +278,10 @@ func (f *RegexRouter) Next(regstr string, filter Filter) error {
 		f.compiledRegexp = make(map[string]*regexp.Regexp)
 	}
 
-	compiledregexp := regexp.MustCompile(regstr)
+	compiledregexp := regexp.MustCompile(tag.Key)
 
-	f.NextFilter[regstr] = filter
-	f.compiledRegexp[regstr] = compiledregexp
+	f.NextFilter[tag.Key] = filter
+	f.compiledRegexp[tag.Key] = compiledregexp
 	return nil
 }
 
@@ -248,6 +297,7 @@ func (f *RegexRouter) Fill(msg string) error {
 		if cr, found := f.compiledRegexp[k]; found {
 			if cr.MatchString(msg) {
 				if v != nil {
+					fmt.Printf("[FILTER DEBUG][%s][%s] filled\n", f.Name, k)
 					return v.Fill(msg)
 				}
 			}
@@ -255,6 +305,7 @@ func (f *RegexRouter) Fill(msg string) error {
 	}
 
 	if f.DefaultNextFilter != nil {
+		fmt.Printf("[FILTER DEBUG][%s][default] filled\n", f.Name)
 		return f.DefaultNextFilter.Fill(msg)
 	}
 
@@ -292,8 +343,8 @@ type KVRouter struct {
 	DefaultNextFilter Filter                       `json:"defaultNext"`
 }
 
-func NewKVRouter() *KVRouter {
-	return &KVRouter{BaseFilter: BaseFilter{Type: "路由:字典"}}
+func NewKVRouter(filterId string, filterName string) *KVRouter {
+	return &KVRouter{BaseFilter: NewBaseFilter(filterId, filterName, "路由:字典")}
 }
 
 func (f *KVRouter) String() string {
@@ -301,7 +352,7 @@ func (f *KVRouter) String() string {
 	return string(jsonstr)
 }
 
-func (f *KVRouter) Next(name string, value string, filter Filter) error {
+func (f *KVRouter) Branch(tag BranchTag, filter Filter) error {
 	if f == nil {
 		return fmt.Errorf("call on empty *KVRouter")
 	}
@@ -310,15 +361,15 @@ func (f *KVRouter) Next(name string, value string, filter Filter) error {
 		f.NextFilter = make(map[string]map[string]Filter)
 	}
 
-	if _, found := f.NextFilter[name]; !found {
-		f.NextFilter[name] = make(map[string]Filter)
+	if _, found := f.NextFilter[tag.Key]; !found {
+		f.NextFilter[tag.Key] = make(map[string]Filter)
 	}
 
-	f.NextFilter[name][value] = filter
+	f.NextFilter[tag.Key][tag.Value] = filter
 	return nil
 }
 
-func (f *KVRouter) DefaultNext(filter Filter) error {
+func (f *KVRouter) Next(filter Filter) error {
 	if f == nil {
 		return fmt.Errorf("call on empty *KVRouter")
 	}
@@ -347,25 +398,30 @@ func (f *KVRouter) Fill(msg string) error {
 	fillOnce := false
 
 	for k, vmaps := range f.NextFilter {
-		if value := findByJsonPath(body, k); value != nil {
-			var s string
-			if reflect.TypeOf(value) == reflect.TypeOf(s) {
-				if filter, found := vmaps[value.(string)]; found {
-					fillOnce = true
-					if filter != nil {
-						if err := filter.Fill(msg); err != nil {
-							errlist = append(errlist, err)
-						}
-					}
+		value := findByJsonPath(body, k)
+		var valuestring string
+		switch vstr := value.(type) {
+		case string:
+			valuestring = vstr
+		default:
+			valuestring = ""
+		}
+		
+		if filter, found := vmaps[valuestring]; found {
+			fillOnce = true
+			if filter != nil {
+				if err := filter.Fill(msg); err != nil {
+					errlist = append(errlist, err)
+				} else {
+					fmt.Printf("[FILTER DEBUG][%s][%s:%s] filled\n", f.Name, k, valuestring)
 				}
-			} else {
-				errlist = append(errlist, fmt.Errorf("key[%s] = %v; type string expected", k, value))
 			}
 		}
 	}
 
 	if !fillOnce {
 		if f.DefaultNextFilter != nil {
+			fmt.Printf("[FILTER DEBUG][%s][default] filled\n", f.Name)
 			return f.DefaultNextFilter.Fill(msg)
 		} else {
 			return nil
@@ -377,4 +433,48 @@ func (f *KVRouter) Fill(msg string) error {
 	} else {
 		return fmt.Errorf("multiple error occured while trigger filters %v", errlist)
 	}
+}
+
+type WebAction struct {
+	Url    string `json:"url"`
+	Method string `json:"method"`
+}
+
+type WebTrigger struct {
+	BaseFilter
+	NextFilter Filter    `json:"next"`
+	Action     WebAction `json:"action"`
+}
+
+func (f *WebTrigger) String() string {
+	jsonstr, _ := json.Marshal(f)
+	return string(jsonstr)
+}
+
+func NewWebTrigger(filterId string, filterName string) *WebTrigger {
+	return &WebTrigger{BaseFilter: NewBaseFilter(filterId, filterName, "触发器:Web")}
+}
+
+func (f *WebTrigger) Fill(msg string) error {
+	go func() {
+		rr := httpx.NewRestfulRequest(f.Action.Method, f.Action.Url)
+		rr.Params["msg"] = msg
+		if resp, err := httpx.RestfulCallRetry(rr, 5, 1); err != nil {
+			fmt.Printf("[WebTrigger] failed %s\n%v\n", err, resp)
+		}
+	}()
+
+	if f.NextFilter != nil {
+		return f.NextFilter.Fill(msg)
+	}
+
+	return nil
+}
+
+func (f *WebTrigger) Next(filter Filter) error {
+	if f == nil {
+		return fmt.Errorf("call on empty *WebTrigger")
+	}
+	f.NextFilter = filter
+	return nil
 }

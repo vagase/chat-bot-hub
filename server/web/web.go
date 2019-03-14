@@ -47,11 +47,12 @@ type WebConfig struct {
 }
 
 type CommonResponse struct {
-	Code    int          `json:"code"`
-	Message string       `json:"message,omitempty"`
-	Ts      int64        `json:"ts"`
-	Error   ErrorMessage `json:"error,omitempty""`
-	Body    interface{}  `json:"body,omitempty""`
+	Code    int            `json:"code"`
+	Message string         `json:"message,omitempty"`
+	Ts      int64          `json:"ts"`
+	Error   ErrorMessage   `json:"error,omitempty""`
+	Body    interface{}    `json:"body,omitempty""`
+	Paging  domains.Paging `json:"paging,omitempty"`
 }
 
 type ErrorMessage struct {
@@ -140,6 +141,20 @@ func (ctx *ErrorHandler) ok(w http.ResponseWriter, msg string, body interface{})
 		Ts:      time.Now().Unix(),
 		Message: msg,
 		Body:    body,
+	})
+}
+
+func (ctx *ErrorHandler) okWithPaging(w http.ResponseWriter, msg string, body interface{}, paging domains.Paging) {
+	if ctx.Err != nil {
+		return
+	}
+
+	json.NewEncoder(w).Encode(CommonResponse{
+		Code:    0,
+		Ts:      time.Now().Unix(),
+		Message: msg,
+		Body:    body,
+		Paging:  paging,
 	})
 }
 
@@ -289,6 +304,45 @@ func sentryContext(next http.Handler) http.Handler {
 	})
 }
 
+func healthz() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if atomic.LoadInt32(&healthy) == 1 {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		w.WriteHeader(http.StatusServiceUnavailable)
+	})
+}
+
+func logging(logger *log.Logger) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			defer func() {
+				requestID, ok := r.Context().Value(requestIDKey).(string)
+				if !ok {
+					requestID = "unknown"
+				}
+				logger.Println(requestID, r.Method, r.URL.Path, r.RemoteAddr, r.UserAgent())
+			}()
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+func tracing(nextRequestID func() string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			requestID := r.Header.Get("X-Request-Id")
+			if requestID == "" {
+				requestID = nextRequestID()
+			}
+			ctx := context.WithValue(r.Context(), requestIDKey, requestID)
+			w.Header().Set("X-Request-Id", requestID)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+}
+
 func (ctx *WebServer) Serve() {
 	if ctx.init() != nil {
 		return
@@ -310,6 +364,24 @@ func (ctx *WebServer) Serve() {
 	r.HandleFunc("/bots/{login}", ctx.validate(ctx.updateBot)).Methods("PUT")
 	r.HandleFunc("/bots", ctx.validate(ctx.createBot)).Methods("POST")
 	r.HandleFunc("/bots/scancreate", ctx.validate(ctx.scanCreateBot)).Methods("POST")
+
+	// filter CURD (controls.go)
+	r.HandleFunc("/filters", ctx.validate(ctx.createFilter)).Methods("POST")
+	r.HandleFunc("/filters/{filterId}", ctx.validate(ctx.updateFilter)).Methods("PUT")
+	r.HandleFunc("/filters/{filterId}/next", ctx.validate(ctx.updateFilterNext)).Methods("PUT")
+	r.HandleFunc("/filters", ctx.validate(ctx.getFilters)).Methods("GET")
+
+	// filter templates and generators (filtermanage.go)
+	r.HandleFunc("/filtertemplatesuites", ctx.validate(ctx.getFilterTemplateSuites)).Methods("GET")
+	r.HandleFunc("/filtertemplatesuites", ctx.validate(ctx.createFilterTemplateSuite)).Methods("POST")
+	r.HandleFunc("/filtertemplatesuites/{suiteId}", ctx.validate(ctx.updateFilterTemplateSuite)).Methods("PUT")
+	r.HandleFunc("/filtertemplates", ctx.validate(ctx.createFilterTemplate)).Methods("POST")
+	r.HandleFunc("/filtertemplates/{templateId}", ctx.validate(ctx.updateFilterTemplate)).Methods("PUT")
+	r.HandleFunc("/filtertemplates/{templateId}", ctx.validate(ctx.deleteFilterTemplate)).Methods("DELETE")
+
+	// chatusers and more (controls.go)
+	r.HandleFunc("/chatusers", ctx.validate(ctx.getChatUsers)).Methods("GET")
+	r.HandleFunc("/chatgroups", ctx.validate(ctx.getChatGroups)).Methods("GET")
 
 	// bot login and action (actions.go)
 	r.HandleFunc("/botlogin", ctx.validate(ctx.botLogin)).Methods("POST")
@@ -364,43 +436,4 @@ func (ctx *WebServer) Serve() {
 	<-done
 
 	ctx.Info("Server stopped")
-}
-
-func healthz() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if atomic.LoadInt32(&healthy) == 1 {
-			w.WriteHeader(http.StatusNoContent)
-			return
-		}
-		w.WriteHeader(http.StatusServiceUnavailable)
-	})
-}
-
-func logging(logger *log.Logger) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			defer func() {
-				requestID, ok := r.Context().Value(requestIDKey).(string)
-				if !ok {
-					requestID = "unknown"
-				}
-				logger.Println(requestID, r.Method, r.URL.Path, r.RemoteAddr, r.UserAgent())
-			}()
-			next.ServeHTTP(w, r)
-		})
-	}
-}
-
-func tracing(nextRequestID func() string) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			requestID := r.Header.Get("X-Request-Id")
-			if requestID == "" {
-				requestID = nextRequestID()
-			}
-			ctx := context.WithValue(r.Context(), requestIDKey, requestID)
-			w.Header().Set("X-Request-Id", requestID)
-			next.ServeHTTP(w, r.WithContext(ctx))
-		})
-	}
 }

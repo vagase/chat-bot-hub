@@ -2,6 +2,7 @@ package utils
 
 import (
 	"crypto/sha256"
+	"database/sql"
 	"encoding/hex"
 	"reflect"
 	"time"
@@ -51,4 +52,18 @@ func DecodeMap(src interface{}, target interface{}) error {
 	}
 
 	return decoder.Decode(src)
+}
+
+func StringNull(str string, defaultValue string) sql.NullString {
+	if str == defaultValue {
+		return sql.NullString{
+			String: "",
+			Valid:  false,
+		}
+	} else {
+		return sql.NullString{
+			String: str,
+			Valid:  true,
+		}
+	}
 }

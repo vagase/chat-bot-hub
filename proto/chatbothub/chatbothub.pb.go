@@ -22,6 +22,312 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
+type OperationReply struct {
+	Code                 int64    `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
+	Message              string   `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *OperationReply) Reset()         { *m = OperationReply{} }
+func (m *OperationReply) String() string { return proto.CompactTextString(m) }
+func (*OperationReply) ProtoMessage()    {}
+func (*OperationReply) Descriptor() ([]byte, []int) {
+	return fileDescriptor_0b1f640cec0d9d68, []int{0}
+}
+
+func (m *OperationReply) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_OperationReply.Unmarshal(m, b)
+}
+func (m *OperationReply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_OperationReply.Marshal(b, m, deterministic)
+}
+func (m *OperationReply) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_OperationReply.Merge(m, src)
+}
+func (m *OperationReply) XXX_Size() int {
+	return xxx_messageInfo_OperationReply.Size(m)
+}
+func (m *OperationReply) XXX_DiscardUnknown() {
+	xxx_messageInfo_OperationReply.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_OperationReply proto.InternalMessageInfo
+
+func (m *OperationReply) GetCode() int64 {
+	if m != nil {
+		return m.Code
+	}
+	return 0
+}
+
+func (m *OperationReply) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+type BotFilterRequest struct {
+	BotId                string   `protobuf:"bytes,1,opt,name=botId,proto3" json:"botId,omitempty"`
+	FilterId             string   `protobuf:"bytes,2,opt,name=filterId,proto3" json:"filterId,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *BotFilterRequest) Reset()         { *m = BotFilterRequest{} }
+func (m *BotFilterRequest) String() string { return proto.CompactTextString(m) }
+func (*BotFilterRequest) ProtoMessage()    {}
+func (*BotFilterRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_0b1f640cec0d9d68, []int{1}
+}
+
+func (m *BotFilterRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_BotFilterRequest.Unmarshal(m, b)
+}
+func (m *BotFilterRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_BotFilterRequest.Marshal(b, m, deterministic)
+}
+func (m *BotFilterRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BotFilterRequest.Merge(m, src)
+}
+func (m *BotFilterRequest) XXX_Size() int {
+	return xxx_messageInfo_BotFilterRequest.Size(m)
+}
+func (m *BotFilterRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_BotFilterRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BotFilterRequest proto.InternalMessageInfo
+
+func (m *BotFilterRequest) GetBotId() string {
+	if m != nil {
+		return m.BotId
+	}
+	return ""
+}
+
+func (m *BotFilterRequest) GetFilterId() string {
+	if m != nil {
+		return m.FilterId
+	}
+	return ""
+}
+
+type FilterCreateRequest struct {
+	FilterId             string   `protobuf:"bytes,1,opt,name=filterId,proto3" json:"filterId,omitempty"`
+	FilterType           string   `protobuf:"bytes,2,opt,name=filterType,proto3" json:"filterType,omitempty"`
+	FilterName           string   `protobuf:"bytes,3,opt,name=filterName,proto3" json:"filterName,omitempty"`
+	Body                 string   `protobuf:"bytes,4,opt,name=body,proto3" json:"body,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *FilterCreateRequest) Reset()         { *m = FilterCreateRequest{} }
+func (m *FilterCreateRequest) String() string { return proto.CompactTextString(m) }
+func (*FilterCreateRequest) ProtoMessage()    {}
+func (*FilterCreateRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_0b1f640cec0d9d68, []int{2}
+}
+
+func (m *FilterCreateRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_FilterCreateRequest.Unmarshal(m, b)
+}
+func (m *FilterCreateRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_FilterCreateRequest.Marshal(b, m, deterministic)
+}
+func (m *FilterCreateRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FilterCreateRequest.Merge(m, src)
+}
+func (m *FilterCreateRequest) XXX_Size() int {
+	return xxx_messageInfo_FilterCreateRequest.Size(m)
+}
+func (m *FilterCreateRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_FilterCreateRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_FilterCreateRequest proto.InternalMessageInfo
+
+func (m *FilterCreateRequest) GetFilterId() string {
+	if m != nil {
+		return m.FilterId
+	}
+	return ""
+}
+
+func (m *FilterCreateRequest) GetFilterType() string {
+	if m != nil {
+		return m.FilterType
+	}
+	return ""
+}
+
+func (m *FilterCreateRequest) GetFilterName() string {
+	if m != nil {
+		return m.FilterName
+	}
+	return ""
+}
+
+func (m *FilterCreateRequest) GetBody() string {
+	if m != nil {
+		return m.Body
+	}
+	return ""
+}
+
+type FilterNextRequest struct {
+	FilterId             string   `protobuf:"bytes,1,opt,name=filterId,proto3" json:"filterId,omitempty"`
+	NextFilterId         string   `protobuf:"bytes,2,opt,name=nextFilterId,proto3" json:"nextFilterId,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *FilterNextRequest) Reset()         { *m = FilterNextRequest{} }
+func (m *FilterNextRequest) String() string { return proto.CompactTextString(m) }
+func (*FilterNextRequest) ProtoMessage()    {}
+func (*FilterNextRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_0b1f640cec0d9d68, []int{3}
+}
+
+func (m *FilterNextRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_FilterNextRequest.Unmarshal(m, b)
+}
+func (m *FilterNextRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_FilterNextRequest.Marshal(b, m, deterministic)
+}
+func (m *FilterNextRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FilterNextRequest.Merge(m, src)
+}
+func (m *FilterNextRequest) XXX_Size() int {
+	return xxx_messageInfo_FilterNextRequest.Size(m)
+}
+func (m *FilterNextRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_FilterNextRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_FilterNextRequest proto.InternalMessageInfo
+
+func (m *FilterNextRequest) GetFilterId() string {
+	if m != nil {
+		return m.FilterId
+	}
+	return ""
+}
+
+func (m *FilterNextRequest) GetNextFilterId() string {
+	if m != nil {
+		return m.NextFilterId
+	}
+	return ""
+}
+
+type BranchTag struct {
+	Key                  string   `protobuf:"bytes,1,opt,name=Key,proto3" json:"Key,omitempty"`
+	Value                string   `protobuf:"bytes,2,opt,name=Value,proto3" json:"Value,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *BranchTag) Reset()         { *m = BranchTag{} }
+func (m *BranchTag) String() string { return proto.CompactTextString(m) }
+func (*BranchTag) ProtoMessage()    {}
+func (*BranchTag) Descriptor() ([]byte, []int) {
+	return fileDescriptor_0b1f640cec0d9d68, []int{4}
+}
+
+func (m *BranchTag) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_BranchTag.Unmarshal(m, b)
+}
+func (m *BranchTag) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_BranchTag.Marshal(b, m, deterministic)
+}
+func (m *BranchTag) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BranchTag.Merge(m, src)
+}
+func (m *BranchTag) XXX_Size() int {
+	return xxx_messageInfo_BranchTag.Size(m)
+}
+func (m *BranchTag) XXX_DiscardUnknown() {
+	xxx_messageInfo_BranchTag.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BranchTag proto.InternalMessageInfo
+
+func (m *BranchTag) GetKey() string {
+	if m != nil {
+		return m.Key
+	}
+	return ""
+}
+
+func (m *BranchTag) GetValue() string {
+	if m != nil {
+		return m.Value
+	}
+	return ""
+}
+
+type RouterBranchRequest struct {
+	Tag                  *BranchTag `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitempty"`
+	RouterId             string     `protobuf:"bytes,2,opt,name=routerId,proto3" json:"routerId,omitempty"`
+	FilterId             string     `protobuf:"bytes,3,opt,name=filterId,proto3" json:"filterId,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}   `json:"-"`
+	XXX_unrecognized     []byte     `json:"-"`
+	XXX_sizecache        int32      `json:"-"`
+}
+
+func (m *RouterBranchRequest) Reset()         { *m = RouterBranchRequest{} }
+func (m *RouterBranchRequest) String() string { return proto.CompactTextString(m) }
+func (*RouterBranchRequest) ProtoMessage()    {}
+func (*RouterBranchRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_0b1f640cec0d9d68, []int{5}
+}
+
+func (m *RouterBranchRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_RouterBranchRequest.Unmarshal(m, b)
+}
+func (m *RouterBranchRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_RouterBranchRequest.Marshal(b, m, deterministic)
+}
+func (m *RouterBranchRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RouterBranchRequest.Merge(m, src)
+}
+func (m *RouterBranchRequest) XXX_Size() int {
+	return xxx_messageInfo_RouterBranchRequest.Size(m)
+}
+func (m *RouterBranchRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_RouterBranchRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RouterBranchRequest proto.InternalMessageInfo
+
+func (m *RouterBranchRequest) GetTag() *BranchTag {
+	if m != nil {
+		return m.Tag
+	}
+	return nil
+}
+
+func (m *RouterBranchRequest) GetRouterId() string {
+	if m != nil {
+		return m.RouterId
+	}
+	return ""
+}
+
+func (m *RouterBranchRequest) GetFilterId() string {
+	if m != nil {
+		return m.FilterId
+	}
+	return ""
+}
+
 type EventRequest struct {
 	EventType            string   `protobuf:"bytes,1,opt,name=eventType,proto3" json:"eventType,omitempty"`
 	Body                 string   `protobuf:"bytes,2,opt,name=body,proto3" json:"body,omitempty"`
@@ -36,7 +342,7 @@ func (m *EventRequest) Reset()         { *m = EventRequest{} }
 func (m *EventRequest) String() string { return proto.CompactTextString(m) }
 func (*EventRequest) ProtoMessage()    {}
 func (*EventRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_0b1f640cec0d9d68, []int{0}
+	return fileDescriptor_0b1f640cec0d9d68, []int{6}
 }
 
 func (m *EventRequest) XXX_Unmarshal(b []byte) error {
@@ -99,7 +405,7 @@ func (m *EventReply) Reset()         { *m = EventReply{} }
 func (m *EventReply) String() string { return proto.CompactTextString(m) }
 func (*EventReply) ProtoMessage()    {}
 func (*EventReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_0b1f640cec0d9d68, []int{1}
+	return fileDescriptor_0b1f640cec0d9d68, []int{7}
 }
 
 func (m *EventReply) XXX_Unmarshal(b []byte) error {
@@ -160,7 +466,7 @@ func (m *BotsRequest) Reset()         { *m = BotsRequest{} }
 func (m *BotsRequest) String() string { return proto.CompactTextString(m) }
 func (*BotsRequest) ProtoMessage()    {}
 func (*BotsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_0b1f640cec0d9d68, []int{2}
+	return fileDescriptor_0b1f640cec0d9d68, []int{8}
 }
 
 func (m *BotsRequest) XXX_Unmarshal(b []byte) error {
@@ -206,7 +512,7 @@ func (m *BotsReply) Reset()         { *m = BotsReply{} }
 func (m *BotsReply) String() string { return proto.CompactTextString(m) }
 func (*BotsReply) ProtoMessage()    {}
 func (*BotsReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_0b1f640cec0d9d68, []int{3}
+	return fileDescriptor_0b1f640cec0d9d68, []int{9}
 }
 
 func (m *BotsReply) XXX_Unmarshal(b []byte) error {
@@ -255,7 +561,7 @@ func (m *BotsInfo) Reset()         { *m = BotsInfo{} }
 func (m *BotsInfo) String() string { return proto.CompactTextString(m) }
 func (*BotsInfo) ProtoMessage()    {}
 func (*BotsInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_0b1f640cec0d9d68, []int{4}
+	return fileDescriptor_0b1f640cec0d9d68, []int{10}
 }
 
 func (m *BotsInfo) XXX_Unmarshal(b []byte) error {
@@ -370,7 +676,7 @@ func (m *BotLoginRequest) Reset()         { *m = BotLoginRequest{} }
 func (m *BotLoginRequest) String() string { return proto.CompactTextString(m) }
 func (*BotLoginRequest) ProtoMessage()    {}
 func (*BotLoginRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_0b1f640cec0d9d68, []int{5}
+	return fileDescriptor_0b1f640cec0d9d68, []int{11}
 }
 
 func (m *BotLoginRequest) XXX_Unmarshal(b []byte) error {
@@ -451,7 +757,7 @@ func (m *BotLoginReply) Reset()         { *m = BotLoginReply{} }
 func (m *BotLoginReply) String() string { return proto.CompactTextString(m) }
 func (*BotLoginReply) ProtoMessage()    {}
 func (*BotLoginReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_0b1f640cec0d9d68, []int{6}
+	return fileDescriptor_0b1f640cec0d9d68, []int{12}
 }
 
 func (m *BotLoginReply) XXX_Unmarshal(b []byte) error {
@@ -493,7 +799,7 @@ func (m *BotActionRequest) Reset()         { *m = BotActionRequest{} }
 func (m *BotActionRequest) String() string { return proto.CompactTextString(m) }
 func (*BotActionRequest) ProtoMessage()    {}
 func (*BotActionRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_0b1f640cec0d9d68, []int{7}
+	return fileDescriptor_0b1f640cec0d9d68, []int{13}
 }
 
 func (m *BotActionRequest) XXX_Unmarshal(b []byte) error {
@@ -556,7 +862,7 @@ func (m *BotActionReply) Reset()         { *m = BotActionReply{} }
 func (m *BotActionReply) String() string { return proto.CompactTextString(m) }
 func (*BotActionReply) ProtoMessage()    {}
 func (*BotActionReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_0b1f640cec0d9d68, []int{8}
+	return fileDescriptor_0b1f640cec0d9d68, []int{14}
 }
 
 func (m *BotActionReply) XXX_Unmarshal(b []byte) error {
@@ -606,6 +912,12 @@ func (m *BotActionReply) GetBody() string {
 }
 
 func init() {
+	proto.RegisterType((*OperationReply)(nil), "chatbothub.OperationReply")
+	proto.RegisterType((*BotFilterRequest)(nil), "chatbothub.BotFilterRequest")
+	proto.RegisterType((*FilterCreateRequest)(nil), "chatbothub.FilterCreateRequest")
+	proto.RegisterType((*FilterNextRequest)(nil), "chatbothub.FilterNextRequest")
+	proto.RegisterType((*BranchTag)(nil), "chatbothub.BranchTag")
+	proto.RegisterType((*RouterBranchRequest)(nil), "chatbothub.RouterBranchRequest")
 	proto.RegisterType((*EventRequest)(nil), "chatbothub.EventRequest")
 	proto.RegisterType((*EventReply)(nil), "chatbothub.EventReply")
 	proto.RegisterType((*BotsRequest)(nil), "chatbothub.BotsRequest")
@@ -620,46 +932,61 @@ func init() {
 func init() { proto.RegisterFile("chatbothub.proto", fileDescriptor_0b1f640cec0d9d68) }
 
 var fileDescriptor_0b1f640cec0d9d68 = []byte{
-	// 611 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x55, 0x5d, 0x6e, 0xd3, 0x40,
-	0x10, 0xc6, 0xf9, 0xcf, 0x04, 0x68, 0xb5, 0x2a, 0x65, 0x49, 0xab, 0xaa, 0xf8, 0x29, 0x4f, 0x55,
-	0x55, 0x1e, 0x51, 0x1f, 0x6a, 0xa8, 0x4a, 0x25, 0x1e, 0x2a, 0xab, 0x1c, 0xc0, 0x4e, 0xb6, 0x8d,
-	0x85, 0xbb, 0x1b, 0xb2, 0x63, 0xa2, 0x54, 0x9c, 0x82, 0x0b, 0x70, 0x01, 0x2e, 0xc3, 0x8d, 0xd0,
-	0xce, 0xda, 0xeb, 0x8d, 0x29, 0x08, 0x09, 0x89, 0xb7, 0xfd, 0xbe, 0x59, 0xcf, 0xcc, 0xf7, 0x8d,
-	0xc7, 0x86, 0xed, 0xe9, 0x3c, 0xc1, 0x54, 0xe1, 0xbc, 0x48, 0x8f, 0x16, 0x4b, 0x85, 0x8a, 0x41,
-	0xcd, 0x84, 0x5f, 0xe0, 0xf1, 0xf9, 0x67, 0x21, 0x31, 0x16, 0x9f, 0x0a, 0xa1, 0x91, 0xed, 0xc3,
-	0x50, 0x18, 0x7c, 0xbd, 0x5e, 0x08, 0x1e, 0x1c, 0x06, 0x93, 0x61, 0x5c, 0x13, 0x8c, 0x41, 0x27,
-	0x55, 0xb3, 0x35, 0x6f, 0x51, 0x80, 0xce, 0x6c, 0x0c, 0x83, 0x69, 0x9e, 0x09, 0x89, 0x97, 0x33,
-	0xde, 0x26, 0xde, 0x61, 0x76, 0x00, 0x60, 0xcf, 0x94, 0xae, 0x43, 0x51, 0x8f, 0x09, 0xef, 0x01,
-	0xca, 0xea, 0x8b, 0x7c, 0xfd, 0x9f, 0x6b, 0x9f, 0xc2, 0x28, 0x52, 0xa8, 0x2b, 0xe1, 0xbb, 0xd0,
-	0xcb, 0xd5, 0x6d, 0x26, 0x35, 0x0f, 0x0e, 0xdb, 0x93, 0x61, 0x5c, 0x22, 0xc3, 0xa7, 0x0a, 0x2f,
-	0x67, 0x9a, 0xb7, 0x2c, 0x6f, 0x51, 0x78, 0x0a, 0x43, 0xfb, 0xb8, 0xe9, 0xfc, 0x18, 0x06, 0xa9,
-	0x42, 0x7d, 0x29, 0x6f, 0x14, 0x3d, 0x3e, 0x3a, 0xd9, 0x39, 0xf2, 0x6c, 0x8f, 0xca, 0x58, 0xec,
-	0x6e, 0x85, 0xdf, 0x5b, 0x30, 0xa8, 0xe8, 0x0d, 0x19, 0xc1, 0x1f, 0x65, 0xb4, 0x9a, 0x32, 0x8c,
-	0x2d, 0x32, 0xb9, 0x13, 0xa5, 0x7c, 0x3a, 0x33, 0x0e, 0x7d, 0x8d, 0xc9, 0x12, 0xcf, 0x90, 0x74,
-	0xb7, 0xe3, 0x0a, 0x9a, 0x4a, 0x79, 0xa2, 0xf1, 0x2a, 0x93, 0xb7, 0xbc, 0x4b, 0x21, 0x87, 0xd9,
-	0x0e, 0x74, 0x49, 0x33, 0xef, 0x51, 0x2a, 0x0b, 0xcc, 0x50, 0xe8, 0x40, 0xda, 0xfa, 0x76, 0x28,
-	0x8e, 0x30, 0xee, 0x68, 0x4c, 0xb0, 0xd0, 0x7c, 0x70, 0x18, 0x4c, 0xba, 0x71, 0x89, 0x4c, 0xd7,
-	0x37, 0x59, 0x8e, 0x62, 0x49, 0x8f, 0x0d, 0x6d, 0xd7, 0x35, 0x63, 0x6a, 0x91, 0x8f, 0x1c, 0x6c,
-	0x2d, 0x02, 0xd4, 0xf7, 0x34, 0x91, 0x1f, 0x96, 0x39, 0x1f, 0x11, 0x5f, 0xc1, 0xf0, 0x47, 0x00,
-	0x5b, 0x91, 0xc2, 0xf7, 0xa6, 0x70, 0x35, 0xb1, 0x7f, 0x71, 0xcd, 0x69, 0x6d, 0xfb, 0x5a, 0xc7,
-	0x30, 0x58, 0x24, 0x5a, 0xaf, 0xd4, 0x72, 0x56, 0xbe, 0x30, 0x0e, 0x1b, 0x1f, 0xa4, 0xc2, 0xec,
-	0x66, 0x6d, 0xba, 0xeb, 0x5a, 0x1f, 0x1c, 0xb1, 0xe9, 0x52, 0xaf, 0xe9, 0x92, 0x53, 0xdb, 0xf7,
-	0xd4, 0x86, 0x2f, 0xe1, 0x49, 0x2d, 0xc9, 0xbc, 0x45, 0xdb, 0xd0, 0xbe, 0xd3, 0xb7, 0xa5, 0x16,
-	0x73, 0x0c, 0xbf, 0x06, 0xb0, 0x1d, 0x29, 0x3c, 0x9b, 0x62, 0xa6, 0x9c, 0xee, 0x09, 0x6c, 0x25,
-	0x3e, 0xe1, 0xe4, 0x37, 0xe9, 0x5a, 0x65, 0xcb, 0x57, 0x79, 0x00, 0x60, 0x2f, 0x92, 0x37, 0xd6,
-	0x00, 0x8f, 0xa9, 0xe3, 0x91, 0x59, 0xb7, 0x8e, 0x1f, 0x37, 0x4c, 0x78, 0x0f, 0x4f, 0xbd, 0x9e,
-	0x4c, 0xe3, 0x7f, 0xdf, 0x91, 0x99, 0x70, 0x31, 0x9d, 0x0a, 0xad, 0xa9, 0xa7, 0x41, 0x5c, 0xc1,
-	0x4a, 0x7c, 0xdb, 0x89, 0x77, 0x0b, 0xdf, 0xa9, 0x17, 0xfe, 0xe4, 0x5b, 0x0b, 0xe0, 0xcd, 0x3c,
-	0xc1, 0x48, 0xe1, 0xbb, 0x22, 0x65, 0xe7, 0x30, 0xa2, 0xef, 0xc7, 0x75, 0x21, 0xa5, 0xc8, 0x19,
-	0xf7, 0x97, 0xce, 0xff, 0xac, 0x8d, 0x77, 0x1f, 0x88, 0x2c, 0xf2, 0x75, 0xf8, 0x68, 0x12, 0x1c,
-	0x07, 0xec, 0x35, 0xf4, 0x2f, 0x84, 0xc9, 0xa9, 0xd9, 0xf3, 0xe6, 0xde, 0x56, 0x19, 0x9e, 0xfd,
-	0x1a, 0xa0, 0x04, 0xec, 0x2d, 0x2d, 0x32, 0x8d, 0x91, 0xed, 0x35, 0x2e, 0xf9, 0xef, 0xeb, 0xf8,
-	0xc5, 0xc3, 0x41, 0x9b, 0xe5, 0x82, 0x3e, 0x27, 0xd6, 0x54, 0xb6, 0xdf, 0xb8, 0xb9, 0x31, 0xff,
-	0xf1, 0xf8, 0x37, 0x51, 0x4a, 0x14, 0x1d, 0xc3, 0x9e, 0x14, 0x78, 0x34, 0x4f, 0x56, 0x1f, 0x57,
-	0x19, 0xce, 0x57, 0x99, 0x9c, 0x79, 0xf7, 0xa3, 0xad, 0xda, 0xbd, 0x2b, 0xf3, 0x33, 0xb8, 0x0a,
-	0xd2, 0x1e, 0xfd, 0x15, 0x5e, 0xfd, 0x0c, 0x00, 0x00, 0xff, 0xff, 0xa8, 0x75, 0x96, 0x60, 0x29,
-	0x06, 0x00, 0x00,
+	// 850 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x56, 0xcd, 0x52, 0xe3, 0x46,
+	0x10, 0x46, 0x16, 0xfe, 0x6b, 0x13, 0x70, 0x86, 0x9f, 0x28, 0x86, 0x10, 0x67, 0x2e, 0xf1, 0x89,
+	0xa2, 0xe0, 0x98, 0x22, 0x55, 0x08, 0x08, 0x71, 0x25, 0x21, 0x94, 0x42, 0xf6, 0x3e, 0x96, 0x07,
+	0x5b, 0xb5, 0xb2, 0xc6, 0xab, 0x19, 0x61, 0x4c, 0xed, 0x75, 0x5f, 0x60, 0x9f, 0x63, 0x5f, 0x86,
+	0x37, 0xda, 0x9a, 0x19, 0xfd, 0x8c, 0x8c, 0x17, 0xa8, 0x3d, 0xec, 0x6d, 0xba, 0x7b, 0xfa, 0x53,
+	0x7f, 0xdd, 0x3d, 0xdd, 0x82, 0xb6, 0x3f, 0x26, 0x62, 0xc0, 0xc4, 0x38, 0x19, 0x1c, 0x4c, 0x63,
+	0x26, 0x18, 0x82, 0x42, 0x83, 0x7f, 0x87, 0xf5, 0x7f, 0xa7, 0x34, 0x26, 0x22, 0x60, 0x91, 0x47,
+	0xa7, 0xe1, 0x1c, 0x21, 0x58, 0xf5, 0xd9, 0x90, 0x3a, 0x56, 0xd7, 0xea, 0xd9, 0x9e, 0x3a, 0x23,
+	0x07, 0xea, 0x13, 0xca, 0x39, 0x19, 0x51, 0xa7, 0xd2, 0xb5, 0x7a, 0x4d, 0x2f, 0x13, 0xf1, 0x39,
+	0xb4, 0x5d, 0x26, 0xfe, 0x08, 0x42, 0x41, 0x63, 0x8f, 0xbe, 0x4b, 0x28, 0x17, 0x68, 0x0b, 0xaa,
+	0x03, 0x26, 0xfa, 0x43, 0x05, 0xd1, 0xf4, 0xb4, 0x80, 0x3a, 0xd0, 0xb8, 0x55, 0xd7, 0xfa, 0xc3,
+	0x14, 0x24, 0x97, 0xf1, 0x07, 0x0b, 0x36, 0x35, 0xc6, 0x59, 0x4c, 0x89, 0xa0, 0x19, 0x92, 0xe9,
+	0x63, 0x95, 0x7d, 0xd0, 0x3e, 0x80, 0x3e, 0xdf, 0xcc, 0xa7, 0x59, 0x58, 0x86, 0xa6, 0xb0, 0x5f,
+	0x91, 0x09, 0x75, 0x6c, 0xd3, 0x2e, 0x35, 0x92, 0xe7, 0x80, 0x0d, 0xe7, 0xce, 0xaa, 0xb2, 0xa8,
+	0x33, 0xfe, 0x0f, 0xbe, 0xd7, 0x61, 0x5c, 0xd1, 0x7b, 0xf1, 0x9a, 0x20, 0x30, 0xac, 0x45, 0xf4,
+	0x3e, 0xe5, 0x9f, 0x13, 0x2b, 0xe9, 0xf0, 0x31, 0x34, 0xdd, 0x98, 0x44, 0xfe, 0xf8, 0x86, 0x8c,
+	0x50, 0x1b, 0xec, 0xbf, 0xe8, 0x3c, 0xc5, 0x91, 0x47, 0x99, 0xad, 0x37, 0x24, 0x4c, 0x32, 0x0a,
+	0x5a, 0xc0, 0x77, 0xb0, 0xe9, 0xb1, 0x44, 0xd0, 0x58, 0xbb, 0x66, 0xb1, 0xfc, 0x0a, 0xb6, 0x20,
+	0x23, 0xe5, 0xde, 0x3a, 0xda, 0x3e, 0x30, 0x4a, 0x9b, 0x7f, 0xc2, 0x93, 0x37, 0x64, 0xd0, 0xb1,
+	0xf2, 0x2f, 0xb2, 0x9d, 0xc9, 0x25, 0x42, 0xf6, 0x42, 0x25, 0xde, 0xc3, 0xda, 0xc5, 0x1d, 0x8d,
+	0x72, 0xf2, 0x7b, 0xd0, 0xa4, 0x52, 0x56, 0x49, 0xd6, 0x51, 0x17, 0x8a, 0x3c, 0x87, 0x95, 0x22,
+	0x87, 0x12, 0xdd, 0x0f, 0x03, 0x1a, 0x89, 0x02, 0x3d, 0x93, 0x65, 0x4d, 0xf4, 0x59, 0xc1, 0xe9,
+	0xcc, 0x1b, 0x1a, 0xfc, 0x00, 0x90, 0x7e, 0x5d, 0x76, 0xe2, 0xb7, 0xfd, 0xf6, 0x09, 0xb4, 0x5c,
+	0x26, 0x78, 0x46, 0x7c, 0x07, 0x6a, 0x21, 0x1b, 0x05, 0x11, 0x77, 0xac, 0xae, 0xdd, 0x6b, 0x7a,
+	0xa9, 0x24, 0xf5, 0xaa, 0x9f, 0xb9, 0x53, 0xd1, 0x7a, 0x2d, 0xe1, 0x13, 0x68, 0x6a, 0x77, 0x19,
+	0xf9, 0x21, 0x34, 0x06, 0x4c, 0xf0, 0x7e, 0x74, 0xcb, 0x94, 0x7b, 0xeb, 0x68, 0xab, 0x54, 0xab,
+	0xd4, 0xe6, 0xe5, 0xb7, 0xf0, 0xa7, 0x0a, 0x34, 0x32, 0x75, 0x89, 0x86, 0xf5, 0x2c, 0x8d, 0xca,
+	0x22, 0x0d, 0x99, 0x96, 0xa8, 0x68, 0x78, 0x75, 0x96, 0xcf, 0x97, 0x0b, 0x12, 0x8b, 0x53, 0xa1,
+	0x78, 0xdb, 0x5e, 0x26, 0xca, 0x2f, 0x85, 0x84, 0x8b, 0xeb, 0x20, 0x1a, 0x39, 0x55, 0x65, 0xca,
+	0x65, 0xd9, 0x98, 0x8a, 0xb3, 0x53, 0xd3, 0x8d, 0xa9, 0x04, 0x59, 0x14, 0x75, 0x50, 0xdc, 0xea,
+	0xba, 0x28, 0xb9, 0x42, 0x66, 0x87, 0x0b, 0x22, 0x12, 0xee, 0x34, 0xba, 0x56, 0xaf, 0xea, 0xa5,
+	0x52, 0xf1, 0x18, 0x95, 0x5b, 0xd3, 0x7c, 0x8c, 0xca, 0x2f, 0x1f, 0x19, 0x60, 0x8e, 0x0c, 0x19,
+	0xb7, 0x4f, 0xa2, 0xff, 0xe3, 0xd0, 0x69, 0xe9, 0xb1, 0x93, 0x8a, 0xf8, 0xd1, 0x82, 0x0d, 0x97,
+	0x89, 0xbf, 0xe5, 0x87, 0x8d, 0x77, 0xfa, 0xd5, 0x59, 0xcb, 0xb9, 0xda, 0x26, 0xd7, 0x0e, 0x34,
+	0xa6, 0x84, 0xf3, 0x19, 0x8b, 0x87, 0x69, 0xc3, 0xe4, 0xb2, 0xcc, 0x43, 0xc4, 0x44, 0x70, 0x3b,
+	0x97, 0xd1, 0x55, 0x75, 0x1e, 0x72, 0x45, 0x39, 0x4b, 0xb5, 0xc5, 0x2c, 0xe5, 0x6c, 0xeb, 0x06,
+	0x5b, 0xfc, 0x0b, 0x7c, 0x57, 0x50, 0x92, 0x5d, 0xd4, 0x06, 0x7b, 0xc2, 0x47, 0xd9, 0xac, 0x98,
+	0xf0, 0x11, 0xfe, 0x68, 0xa9, 0x71, 0x7b, 0xea, 0xeb, 0x71, 0xad, 0x79, 0xf7, 0x60, 0x83, 0x98,
+	0x8a, 0x9c, 0xfe, 0xa2, 0xba, 0x60, 0x59, 0x31, 0x59, 0xee, 0x03, 0xe8, 0x8b, 0x2a, 0x37, 0xe9,
+	0xa0, 0x2c, 0x34, 0x85, 0xdd, 0x2d, 0xc6, 0xa5, 0xa1, 0xc1, 0x0f, 0xb0, 0x6e, 0xc4, 0x24, 0x03,
+	0x7f, 0x7d, 0x44, 0xb2, 0xc2, 0x89, 0xef, 0x53, 0xce, 0x55, 0x4c, 0x0d, 0x2f, 0x13, 0x33, 0xf2,
+	0x76, 0x4e, 0x7e, 0xd9, 0xc0, 0x3e, 0x7a, 0x5c, 0x05, 0x38, 0x1b, 0x13, 0xe1, 0x32, 0xf1, 0x67,
+	0x32, 0x40, 0x17, 0xd0, 0x52, 0xf3, 0xe3, 0x26, 0x89, 0x22, 0x1a, 0x22, 0xc7, 0x7c, 0x74, 0xe6,
+	0x58, 0xeb, 0xec, 0x2c, 0xb1, 0x4c, 0xc3, 0x39, 0x5e, 0xe9, 0x59, 0x87, 0x16, 0xfa, 0x0d, 0xea,
+	0x97, 0x54, 0x62, 0x72, 0xf4, 0xc3, 0xe2, 0xbb, 0xcd, 0x10, 0xb6, 0x9f, 0x1a, 0x14, 0x00, 0x3a,
+	0x57, 0x0f, 0x59, 0x95, 0x11, 0xed, 0x2e, 0x5c, 0x32, 0xfb, 0xb5, 0xf3, 0xe3, 0x72, 0xa3, 0x46,
+	0xb9, 0x54, 0xe3, 0x44, 0x27, 0x15, 0xed, 0x2d, 0xdc, 0x2c, 0xd5, 0xbf, 0xd3, 0xf9, 0x82, 0xd5,
+	0x04, 0xd2, 0xcb, 0xe8, 0x09, 0x50, 0x69, 0x6f, 0x97, 0x81, 0xca, 0x7f, 0x05, 0x78, 0x05, 0xfd,
+	0x03, 0x6b, 0xe6, 0x8a, 0x46, 0x3f, 0x9b, 0xb7, 0x97, 0x2c, 0xef, 0x17, 0xe0, 0xfa, 0x00, 0xc5,
+	0xaa, 0x45, 0x3f, 0x3d, 0x05, 0x33, 0x56, 0xf0, 0xcb, 0x91, 0x99, 0xbb, 0xb2, 0x1c, 0xd9, 0x92,
+	0x2d, 0xfa, 0x3c, 0x9c, 0x7b, 0x08, 0xbb, 0x11, 0x15, 0x07, 0x63, 0x32, 0x7b, 0x3b, 0x0b, 0xc4,
+	0x78, 0x16, 0x44, 0x43, 0xe3, 0xbe, 0xbb, 0x51, 0xf4, 0xdb, 0xb5, 0xfc, 0x9d, 0xba, 0xb6, 0x06,
+	0x35, 0xf5, 0x5f, 0x75, 0xfc, 0x39, 0x00, 0x00, 0xff, 0xff, 0xe9, 0xa6, 0xfc, 0xda, 0x6b, 0x09,
+	0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -680,6 +1007,10 @@ type ChatBotHubClient interface {
 	GetBots(ctx context.Context, in *BotsRequest, opts ...grpc.CallOption) (*BotsReply, error)
 	BotLogin(ctx context.Context, in *BotLoginRequest, opts ...grpc.CallOption) (*BotLoginReply, error)
 	BotAction(ctx context.Context, in *BotActionRequest, opts ...grpc.CallOption) (*BotActionReply, error)
+	BotFilter(ctx context.Context, in *BotFilterRequest, opts ...grpc.CallOption) (*OperationReply, error)
+	FilterCreate(ctx context.Context, in *FilterCreateRequest, opts ...grpc.CallOption) (*OperationReply, error)
+	FilterNext(ctx context.Context, in *FilterNextRequest, opts ...grpc.CallOption) (*OperationReply, error)
+	RouterBranch(ctx context.Context, in *RouterBranchRequest, opts ...grpc.CallOption) (*OperationReply, error)
 }
 
 type chatBotHubClient struct {
@@ -748,6 +1079,42 @@ func (c *chatBotHubClient) BotAction(ctx context.Context, in *BotActionRequest, 
 	return out, nil
 }
 
+func (c *chatBotHubClient) BotFilter(ctx context.Context, in *BotFilterRequest, opts ...grpc.CallOption) (*OperationReply, error) {
+	out := new(OperationReply)
+	err := c.cc.Invoke(ctx, "/chatbothub.ChatBotHub/BotFilter", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *chatBotHubClient) FilterCreate(ctx context.Context, in *FilterCreateRequest, opts ...grpc.CallOption) (*OperationReply, error) {
+	out := new(OperationReply)
+	err := c.cc.Invoke(ctx, "/chatbothub.ChatBotHub/FilterCreate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *chatBotHubClient) FilterNext(ctx context.Context, in *FilterNextRequest, opts ...grpc.CallOption) (*OperationReply, error) {
+	out := new(OperationReply)
+	err := c.cc.Invoke(ctx, "/chatbothub.ChatBotHub/FilterNext", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *chatBotHubClient) RouterBranch(ctx context.Context, in *RouterBranchRequest, opts ...grpc.CallOption) (*OperationReply, error) {
+	out := new(OperationReply)
+	err := c.cc.Invoke(ctx, "/chatbothub.ChatBotHub/RouterBranch", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ChatBotHubServer is the server API for ChatBotHub service.
 type ChatBotHubServer interface {
 	// bots only use eventtunnel to communicate
@@ -756,6 +1123,10 @@ type ChatBotHubServer interface {
 	GetBots(context.Context, *BotsRequest) (*BotsReply, error)
 	BotLogin(context.Context, *BotLoginRequest) (*BotLoginReply, error)
 	BotAction(context.Context, *BotActionRequest) (*BotActionReply, error)
+	BotFilter(context.Context, *BotFilterRequest) (*OperationReply, error)
+	FilterCreate(context.Context, *FilterCreateRequest) (*OperationReply, error)
+	FilterNext(context.Context, *FilterNextRequest) (*OperationReply, error)
+	RouterBranch(context.Context, *RouterBranchRequest) (*OperationReply, error)
 }
 
 func RegisterChatBotHubServer(s *grpc.Server, srv ChatBotHubServer) {
@@ -842,6 +1213,78 @@ func _ChatBotHub_BotAction_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ChatBotHub_BotFilter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BotFilterRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChatBotHubServer).BotFilter(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/chatbothub.ChatBotHub/BotFilter",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChatBotHubServer).BotFilter(ctx, req.(*BotFilterRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ChatBotHub_FilterCreate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FilterCreateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChatBotHubServer).FilterCreate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/chatbothub.ChatBotHub/FilterCreate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChatBotHubServer).FilterCreate(ctx, req.(*FilterCreateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ChatBotHub_FilterNext_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FilterNextRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChatBotHubServer).FilterNext(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/chatbothub.ChatBotHub/FilterNext",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChatBotHubServer).FilterNext(ctx, req.(*FilterNextRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ChatBotHub_RouterBranch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RouterBranchRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChatBotHubServer).RouterBranch(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/chatbothub.ChatBotHub/RouterBranch",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChatBotHubServer).RouterBranch(ctx, req.(*RouterBranchRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _ChatBotHub_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "chatbothub.ChatBotHub",
 	HandlerType: (*ChatBotHubServer)(nil),
@@ -857,6 +1300,22 @@ var _ChatBotHub_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "BotAction",
 			Handler:    _ChatBotHub_BotAction_Handler,
+		},
+		{
+			MethodName: "BotFilter",
+			Handler:    _ChatBotHub_BotFilter_Handler,
+		},
+		{
+			MethodName: "FilterCreate",
+			Handler:    _ChatBotHub_FilterCreate_Handler,
+		},
+		{
+			MethodName: "FilterNext",
+			Handler:    _ChatBotHub_FilterNext_Handler,
+		},
+		{
+			MethodName: "RouterBranch",
+			Handler:    _ChatBotHub_RouterBranch_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

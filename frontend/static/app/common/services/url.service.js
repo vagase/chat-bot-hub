@@ -5,11 +5,15 @@
     var result = {
       'login': buildUrl('login'),
       'bots': buildUrl('bots'),
+      'filters': buildUrl('filters'),
       'consts': buildUrl('consts'),
       'botlogin': buildUrl('botlogin'),
       'botaction': buildUrl('botaction'),
       'loginqq': buildUrl('loginqq'),
       'bots/id': buildUrl('bots/id'),
+      'chatusers': buildUrl('chatusers'),
+      'chatgroups': buildUrl('chatgroups'),
+      'filtertemplatesuites': buildUrl('filtertemplatesuites')
     };
     return result;
     

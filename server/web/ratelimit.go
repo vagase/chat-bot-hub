@@ -10,20 +10,23 @@ var (
 	dayLimit map[string]int = map[string]int{
 		chatbothub.AddContact:    100,
 		chatbothub.AcceptUser:    200,
-		chatbothub.CreateRoom:    10,
+		chatbothub.CreateRoom:    100,
 		chatbothub.AddRoomMember: 200,
+		chatbothub.SyncContact:   5,
 	}
 
 	hourLimit map[string]int = map[string]int{
 		chatbothub.AddContact:    20,
-		chatbothub.CreateRoom:    2,
+		chatbothub.CreateRoom:    30,
 		chatbothub.AddRoomMember: 60,
+		chatbothub.SyncContact:   1,
 	}
 
 	minuteLimit map[string]int = map[string]int{
-		chatbothub.AddContact: 1,
-		chatbothub.AcceptUser: 1,
-		chatbothub.CreateRoom: 1,
+		chatbothub.AddContact:  1,
+		chatbothub.AcceptUser:  1,
+		chatbothub.CreateRoom:  1,
+		chatbothub.SyncContact: 1,
 	}
 )
 

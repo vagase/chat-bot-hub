@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/getsentry/raven-go"
-	"github.com/fluent/fluent-logger-golang/fluent"
-	
+
 	pb "github.com/hawkwithwind/chat-bot-hub/proto/chatbothub"
-	"github.com/hawkwithwind/chat-bot-hub/server/httpx"	
+	"github.com/hawkwithwind/chat-bot-hub/server/httpx"
 )
 
 type ChatBotStatus int32
@@ -61,21 +61,27 @@ type ChatBot struct {
 	errmsg     string
 	filter     Filter
 	logger     *log.Logger
-	fluentLogger *fluent.Fluent
-	fluentTag    string
 }
 
 const (
-	AddContact          string = "AddContact"
-	AcceptUser          string = "AcceptUser"
-	SendTextMessage     string = "SendTextMessage"
-	CreateRoom          string = "CreateRoom"
-	AddRoomMember       string = "AddRoomMember"
-	GetRoomMembers      string = "GetRoomMembers"
-	DeleteRoomMember    string = "DeleteRoomMember"
-	SetRoomAnnouncement string = "SetRoomAnnouncement"
-	SetRoomName         string = "SetRoomName"
-	GetContactQRCode    string = "GetContactQRCode"
+	AddContact               string = "AddContact"
+	DeleteContact            string = "DeleteContact"
+	AcceptUser               string = "AcceptUser"
+	SendTextMessage          string = "SendTextMessage"
+	SendAppMessage           string = "SendAppMessage"
+	SendImageMessage         string = "SendImageMessage"
+	SendImageResourceMessage string = "SendImageResourceMessage"
+	CreateRoom               string = "CreateRoom"
+	AddRoomMember            string = "AddRoomMember"
+	InviteRoomMember         string = "InviteRoomMember"
+	GetRoomMembers           string = "GetRoomMembers"
+	DeleteRoomMember         string = "DeleteRoomMember"
+	SetRoomAnnouncement      string = "SetRoomAnnouncement"
+	SetRoomName              string = "SetRoomName"
+	GetRoomQRCode            string = "GetRoomQRCode"
+	GetContactQRCode         string = "GetContactQRCode"
+	SearchContact            string = "SearchContact"
+	SyncContact              string = "SyncContact"
 )
 
 func (bot *ChatBot) Info(msg string, v ...interface{}) {
@@ -89,13 +95,19 @@ func (bot *ChatBot) Error(err error, msg string, v ...interface{}) {
 	bot.logger.Printf("Error %v", err)
 }
 
-func NewChatBot(fluentLogger *fluent.Fluent, fluentTag string) *ChatBot {
+func NewChatBot() *ChatBot {
 	return &ChatBot{
 		Status: BeginNew,
 		logger: log.New(os.Stdout, "[BOT] ", log.Ldate|log.Ltime),
-		fluentLogger: fluentLogger,
-		fluentTag: fluentTag,
 	}
+}
+
+func (bot *ChatBot) canReLogin() bool {
+	return bot.Status == BeginRegistered &&
+		len(bot.BotId) > 0 &&
+		len(bot.Login) > 0 &&
+		len(bot.LoginInfo.WxData) > 0 &&
+		len(bot.LoginInfo.Token) > 0
 }
 
 func (bot *ChatBot) register(clientId string, clientType string,
@@ -111,27 +123,6 @@ func (bot *ChatBot) register(clientId string, clientType string,
 	bot.tunnel = tunnel
 	bot.Status = BeginRegistered
 
-	if clientType == WECHATBOT {
-		filter := NewWechatBaseFilter()
-		filter.init("源:微信")
-		pfilter := NewPlainFilter(bot.logger)
-		pfilter.init("调试")
-		ffilter := NewFluentFilter(bot.fluentLogger, bot.fluentTag)
-		ffilter.init("日志")
-
-		var err error
-		err = filter.Next(pfilter)
-		if err != nil {
-			return bot, err
-		}
-
-		err = pfilter.Next(ffilter)
-		if err != nil {
-			return bot, err
-		}
-
-		bot.filter = filter
-	}
 	return bot, nil
 }
 
@@ -263,7 +254,7 @@ func (bot *ChatBot) friendRequest(body string) (string, error) {
 			msgstr := o.ToJson(&msg)
 			return msgstr, o.Err
 		} else {
-			return "", fmt.Errorf("c[%s] request should have xml content")
+			return "", fmt.Errorf("c[%s] request should have xml content", bot.ClientType)
 		}
 	} else {
 		return "", fmt.Errorf("c[%s] not support friend request", bot.ClientType)
@@ -282,16 +273,23 @@ func (bot *ChatBot) BotAction(arId string, actionType string, body string) error
 	var err error
 
 	actionMap := map[string]func(*ChatBot, string, string) error{
-		AddContact:          (*ChatBot).AddContact,
-		AcceptUser:          (*ChatBot).AcceptUser,
-		SendTextMessage:     (*ChatBot).SendTextMessage,
-		CreateRoom:          (*ChatBot).CreateRoom,
-		AddRoomMember:       (*ChatBot).AddRoomMember,
-		GetRoomMembers:      (*ChatBot).GetRoomMembers,
-		DeleteRoomMember:    (*ChatBot).DeleteRoomMember,
-		SetRoomAnnouncement: (*ChatBot).SetRoomAnnouncement,
-		SetRoomName:         (*ChatBot).SetRoomName,
-		GetContactQRCode:    (*ChatBot).GetContactQRCode,
+		AddContact:               (*ChatBot).AddContact,
+		DeleteContact:            (*ChatBot).DeleteContact,
+		AcceptUser:               (*ChatBot).AcceptUser,
+		SendTextMessage:          (*ChatBot).SendTextMessage,
+		SendAppMessage:           (*ChatBot).SendAppMessage,
+		SendImageResourceMessage: (*ChatBot).SendImageResourceMessage,
+		CreateRoom:               (*ChatBot).CreateRoom,
+		AddRoomMember:            (*ChatBot).AddRoomMember,
+		InviteRoomMember:         (*ChatBot).InviteRoomMember,
+		GetRoomMembers:           (*ChatBot).GetRoomMembers,
+		DeleteRoomMember:         (*ChatBot).DeleteRoomMember,
+		SetRoomAnnouncement:      (*ChatBot).SetRoomAnnouncement,
+		SetRoomName:              (*ChatBot).SetRoomName,
+		GetRoomQRCode:            (*ChatBot).GetRoomQRCode,
+		GetContactQRCode:         (*ChatBot).GetContactQRCode,
+		SearchContact:            (*ChatBot).SearchContact,
+		SyncContact:              (*ChatBot).SyncContact,
 	}
 
 	if m, ok := actionMap[actionType]; ok {
@@ -320,6 +318,93 @@ func (o *ErrorHandler) SendAction(bot *ChatBot, arId string, actionType string, 
 		ClientId:   bot.ClientId,
 		Body:       o.ToJson(actionm),
 	})
+}
+
+func (bot *ChatBot) DeleteContact(arId string, body string) error {
+	o := &ErrorHandler{}
+
+	if bot.ClientType == WECHATBOT {
+		bot.Info("DeleteContact")
+		bodym := o.FromJson(body)
+		userId := o.FromMapString("userId", bodym, "actionbody", false, "")
+		o.SendAction(bot, arId, DeleteContact, userId)
+	} else {
+		o.Err = fmt.Errorf("c[%s] not support %s", bot.ClientType, DeleteContact)
+	}
+
+	return o.Err
+}
+
+func (bot *ChatBot) SyncContact(arId string, body string) error {
+	o := &ErrorHandler{}
+
+	if bot.ClientType == WECHATBOT {
+		bot.Info("SyncContact")
+		o.SendAction(bot, arId, SyncContact, "{}")
+	} else {
+		o.Err = fmt.Errorf("c[%s] not support %s", bot.ClientType, SyncContact)
+	}
+
+	return o.Err
+}
+
+func (bot *ChatBot) GetRoomQRCode(arId string, body string) error {
+	o := &ErrorHandler{}
+
+	if bot.ClientType == WECHATBOT {
+		bot.Info("GetRoomQRCode")
+		bodym := o.FromJson(body)
+		groupId := o.FromMapString("groupId", bodym, "actionbody", false, "")
+
+		o.SendAction(bot, arId, GetRoomQRCode, o.ToJson(map[string]interface{}{
+			"groupId": groupId,
+		}))
+
+	} else {
+		o.Err = fmt.Errorf("c[%s] not support %s", bot.ClientType, SendAppMessage)
+	}
+
+	return o.Err
+}
+
+func (bot *ChatBot) SendAppMessage(arId string, body string) error {
+	o := &ErrorHandler{}
+
+	if bot.ClientType == WECHATBOT {
+		bot.Info("SendAppMessage")
+		bodym := o.FromJson(body)
+		toUserName := o.FromMapString("toUserName", bodym, "actionbody", false, "")
+		xml := o.FromMapString("xml", bodym, "actionbody", false, "")
+
+		o.SendAction(bot, arId, SendAppMessage, o.ToJson(map[string]interface{}{
+			"toUserName": toUserName,
+			"xml":        xml,
+		}))
+
+	} else {
+		o.Err = fmt.Errorf("c[%s] not support %s", bot.ClientType, SendAppMessage)
+	}
+
+	return o.Err
+}
+
+func (bot *ChatBot) SearchContact(arId string, body string) error {
+	o := &ErrorHandler{}
+
+	if bot.ClientType == WECHATBOT {
+		bot.Info("Search Contact")
+		bodym := o.FromJson(body)
+		userId := o.FromMapString("userId", bodym, "actionbody", false, "")
+
+		o.SendAction(bot, arId, SearchContact, o.ToJson(map[string]interface{}{
+			"userId": userId,
+		}))
+
+	} else {
+		o.Err = fmt.Errorf("c[%s] not support %s", bot.ClientType, SearchContact)
+	}
+
+	return o.Err
 }
 
 func (bot *ChatBot) AcceptUser(arId string, body string) error {
@@ -404,8 +489,9 @@ func (bot *ChatBot) GetContactQRCode(arId string, body string) error {
 	if bot.ClientType == WECHATBOT {
 		bodym := o.FromJson(body)
 		userId := o.FromMapString("userId", bodym, "actionbody", false, "")
-		style := o.FromMapInt("style", bodym, "actionbody", false, 0)
-		bot.Info("get contact QRCode %s %s", userId, style)
+		style_f := o.FromMapFloat("style", bodym, "actionbody", false, 0.0)
+		style := int(style_f)
+		bot.Info("get contact QRCode %s %d", userId, style)
 
 		o.SendAction(bot, arId, GetContactQRCode, o.ToJson(map[string]interface{}{
 			"userId": userId,
@@ -459,6 +545,27 @@ func (bot *ChatBot) AddRoomMember(arId string, body string) error {
 	return o.Err
 }
 
+func (bot *ChatBot) InviteRoomMember(arId string, body string) error {
+	o := &ErrorHandler{}
+
+	if bot.ClientType == WECHATBOT {
+		bodym := o.FromJson(body)
+		groupId := o.FromMapString("groupId", bodym, "actionbody", false, "")
+		memberId := o.FromMapString("memberId", bodym, "actionbody", false, "")
+		bot.Info("InviteRoomMember %s %s", groupId, memberId)
+
+		o.SendAction(bot, arId, InviteRoomMember, o.ToJson(map[string]interface{}{
+			"groupId": groupId,
+			"userId":  memberId,
+		}))
+
+	} else {
+		o.Err = fmt.Errorf("c[%s] not support %s", bot.ClientType, InviteRoomMember)
+	}
+
+	return o.Err
+}
+
 func (bot *ChatBot) GetRoomMembers(arId string, body string) error {
 	o := &ErrorHandler{}
 
@@ -478,8 +585,214 @@ func (bot *ChatBot) GetRoomMembers(arId string, body string) error {
 }
 
 func (bot *ChatBot) AddContact(arId string, body string) error {
-	return nil
+	o := &ErrorHandler{}
+
+	if bot.ClientType == WECHATBOT {
+		bodym := o.FromJson(body)
+		stranger := o.FromMapString("stranger", bodym, "actionbody", false, "")
+		ticket := o.FromMapString("ticket", bodym, "actionbody", false, "")
+		actype := int(o.FromMapFloat("type", bodym, "actionbody", false, 0.0))
+		content := o.FromMapString("content", bodym, "actionbody", true, "")
+
+		bot.Info("add contact %s", stranger)
+
+		o.SendAction(bot, arId, AddContact, o.ToJson(map[string]interface{}{
+			"stranger": stranger,
+			"ticket":   ticket,
+			"type":     actype,
+			"content":  content,
+		}))
+	} else {
+		o.Err = fmt.Errorf("c[%s] not support %s", bot.ClientType, AddContact)
+	}
+
+	return o.Err
 }
+
+type WechatMsg struct {
+	AppInfo      WechatAppInfo `json:"appinfo"`
+	AppMsg       WechatAppMsg  `json:"appmsg"`
+	Emoji        WechatEmoji   `json:"emoji"`
+	FromUserName string        `json:"fromusername"`
+	Scene        string        `json:"scene"`
+	CommentUrl   string        `json:"commenturl"`
+}
+
+type WechatAppInfo struct {
+	AppName string `json:"appname"`
+	Version string `json:"version"`
+}
+
+type WechatAppMsg struct {
+	Attributions      WechatAppMsgAttributions `json:"$"`
+	Title             string                   `json:"title"`
+	Des               string                   `json:"des"`
+	Action            string                   `json:"action"`
+	Type              string                   `json:"type"`
+	ShowType          string                   `json:"showtype"`
+	SoundType         string                   `json:"soundtype"`
+	MediaTagName      string                   `json:"mediatagname"`
+	MessageExt        string                   `json:"messageext"`
+	MessageAction     string                   `json:"messageaction"`
+	Content           string                   `json:"content"`
+	ContentAttr       string                   `json:"contentattr"`
+	Url               string                   `json:"url"`
+	LowUrl            string                   `json:"lowurl"`
+	DataUrl           string                   `json:"dataurl"`
+	LowDataUrl        string                   `json:"lowdataurl"`
+	ExtInfo           string                   `json:"extinfo"`
+	SourceUserName    string                   `json:"sourceusername"`
+	SourceDisplayName string                   `json:"sourcedisplayname"`
+	ThumbUrl          string                   `json:"thumburl"`
+	Md5               string                   `json:"md5"`
+	StatExtStr        string                   `json:"statextstr"`
+	WeAppInfo         WechatWeAppInfo          `json:"weappinfo"`
+	AppAttach         WechatAppAttach          `json:"appattach"`
+}
+
+type WechatAppMsgAttributions struct {
+	Appid  string `json:"appid"`
+	Sdkver string `json:"sdkver"`
+}
+
+type WechatWeAppInfo struct {
+	UserName       string `json:"username"`
+	AppId          string `json:"appid"`
+	Type           string `json:"type"`
+	Version        string `json:"version"`
+	WeAppIconUrl   string `json:"weappiconurl"`
+	PagePath       string `json:"pagepath"`
+	ShareId        string `json:"shareId"`
+	AppServiceType string `json:"appservicetype"`
+}
+
+type WechatAppAttach struct {
+	TotalLen       string `json:"totallen"`
+	AttachId       string `json:"attachid"`
+	Emoticonmd5    string `json:"emoticonmd5"`
+	FileExt        string `json:"fileext"`
+	CdnThumbUrl    string `json:"cdnthumburl"`
+	CdnThumbMd5    string `json:"cdnthumbmd5"`
+	CdnThumbLength string `json:"cdnthumblength"`
+	CdnThumbWidth  string `json:"cdnthumbwidth"`
+	CdnThumbHeight string `json:"cdnthumbheight"`
+	CdnThumbAeskey string `json:"cdnthumbaeskey"`
+	Aeskey         string `json:"aeskey"`
+	EncryVer       string `json:"encryver"`
+	FileKey        string `json:"filekey"`
+}
+
+type WechatEmoji struct {
+	Attributions WechatEmojiAttributions `json:"$"`
+}
+
+type WechatEmojiAttributions struct {
+	FromUserName      string `json:"fromusername"`
+	ToUserName        string `json:"tousername"`
+	Type              string `json:"type"`
+	IdBuffer          string `json:"idbuffer"`
+	Md5               string `json:"md5"`
+	Len               string `json:"len"`
+	ProductId         string `json:"productid"`
+	AndroidMd5        string `json:"androidmd5"`
+	AndroidLen        string `json:"androidlen"`
+	S60V3Md5          string `json:"s60v3md5"`
+	S60V3Len          string `json:"s60v3len"`
+	S60v5Md5          string `json:"s60v5md5"`
+	S60v5Len          string `json:"s60v5len"`
+	CdnUrl            string `json:"cdnurl"`
+	DesignerId        string `json:"designerid"`
+	ThumbUrl          string `json:"thumburl"`
+	EncryptUrl        string `json:"encrypturl"`
+	AesKey            string `json:"aeskey"`
+	ExternUrl         string `json:"externurl"`
+	ExternMd5         string `json:"externmd5"`
+	Width             string `json:"width"`
+	Height            string `json:"height"`
+	TpUrl             string `json:"tpurl"`
+	TpAuthKey         string `json:"tpauthkey"`
+	AttachedText      string `json:"attachedtext"`
+	AttachedTextColor string `json:"attachedtextcolor"`
+	LenSid            string `json:"lensid"`
+}
+
+const WeAppXmlTemp string = `<appmsg appid="%s" sdkver="%s">
+<title>%s</title>
+<des>%s</des>
+<action>%s</action>
+<type>%s</type>
+<showtype>%s</showtype>
+<soundtype>%s</soundtype>
+<mediatagname>%s</mediatagname>
+<messageext>%s</messageext>
+<messageaction>%s</messageaction>
+<content>%s</content>
+<contentattr>%s</contentattr>
+<url>%s</url>
+<lowurl>%s</lowurl>
+<dataurl>%s</dataurl>
+<lowdataurl>%s</lowdataurl>
+<appattach>
+<totallen>%s</totallen>
+<attachid></attachid>
+<emoticonmd5></emoticonmd5>
+<fileext></fileext>
+<cdnthumburl>%s</cdnthumburl>
+<cdnthumbmd5>%s</cdnthumbmd5>
+<cdnthumblength>%s</cdnthumblength>
+<cdnthumbwidth>%s</cdnthumbwidth>
+<cdnthumbheight>%s</cdnthumbheight>
+<cdnthumbaeskey>%s</cdnthumbaeskey>
+<aeskey>%s</aeskey>
+<encryver>%s</encryver>
+<filekey>%s</filekey>
+</appattach>
+<extinfo>%s</extinfo>
+<sourceusername>%s</sourceusername>
+<sourcedisplayname>%s</sourcedisplayname>
+<thumburl>%s</thumburl>
+<md5>%s</md5>
+<statextstr>%s</statextstr>
+<weappinfo>
+<username><![CDATA[%s]]></username>
+<appid><![CDATA[%s]]></appid>
+<type>%s</type>
+<version>%s</version>
+<weappiconurl><![CDATA[%s]]></weappiconurl>
+<pagepath><![CDATA[%s]]></pagepath>
+<shareId><![CDATA[%s]]></shareId>
+<appservicetype>%s</appservicetype>
+</weappinfo>
+</appmsg>`
+
+const WeEmojiXmlTemp string = `<emoji 
+fromusername="%s" 
+tousername="%s" 
+type="%s" 
+idbuffer="%s" 
+md5="%s" 
+len="%s" 
+productid="%s" 
+androidmd5="%s" 
+androidlen="%s" 
+s60v3md5="%s" 
+s60v3len="%s" 
+s60v5md5="%s" 
+s60v5len="%s" 
+cdnurl="%s" 
+designerid="%s" 
+thumburl="%s" 
+encrypturl="%s" 
+aeskey="%s" 
+externurl="%s" 
+externmd5="%s" 
+width="%s" 
+height="%s" 
+tpurl="%s" 
+tpauthkey="%s" 
+attachedtext="%s" 
+attachedtextcolor="%s" 
+lensid="%s"></emoji>`
 
 func (bot *ChatBot) SendTextMessage(arId string, body string) error {
 	o := &ErrorHandler{}
@@ -487,20 +800,164 @@ func (bot *ChatBot) SendTextMessage(arId string, body string) error {
 	if bot.ClientType == WECHATBOT {
 		bodym := o.FromJson(body)
 		toUserName := o.FromMapString("toUserName", bodym, "actionbody", false, "")
-		content := o.FromMapString("content", bodym, "actionbody", false, "")
-		var atList []interface{}
-		if atListptr := o.FromMap("atList", bodym, "actionbody", []interface{}{}); atListptr != nil {
-			atList = atListptr.([]interface{})
-		}
 
-		bot.Info("Action SendTextMessage %s %v \n%s", toUserName, atList, content)
-		o.SendAction(bot, arId, SendTextMessage, o.ToJson(map[string]interface{}{
-			"toUserName": toUserName,
-			"content":    content,
-			"atList":     atList,
-		}))
+		content_if := o.FromMap("content", bodym, "actionbody", nil)
+		switch content := content_if.(type) {
+		case string:
+			var atList []interface{}
+			if atListptr := o.FromMap("atList", bodym, "actionbody", []interface{}{}); atListptr != nil {
+				atList = atListptr.([]interface{})
+			}
+
+			bot.Info("Action SendTextMessage %s %v \n%s", toUserName, atList, content)
+			o.SendAction(bot, arId, SendTextMessage, o.ToJson(map[string]interface{}{
+				"toUserName": toUserName,
+				"content":    content,
+				"atList":     atList,
+			}))
+
+		case map[string]interface{}:
+			msg_if := o.FromMap("msg", content, "content", nil)
+
+			var msg WechatMsg
+			o.Err = json.Unmarshal([]byte(o.ToJson(msg_if)), &msg)
+			if o.Err != nil {
+				return o.Err
+			}
+
+			var xml string
+			if len(msg.AppMsg.Title) > 0 {
+				appmsg := msg.AppMsg
+				bot.Info("appmsg %v", appmsg)
+
+				if appmsg.Type == "5" {
+					o.SendAction(bot, arId, SendAppMessage, o.ToJson(map[string]interface{}{
+						"toUserName": toUserName,
+						"object": map[string]interface{}{
+							"appid":    appmsg.Attributions.Appid,
+							"sdkver":   appmsg.Attributions.Sdkver,
+							"title":    appmsg.Title,
+							"des":      appmsg.Des,
+							"url":      appmsg.Url,
+							"thumburl": appmsg.ThumbUrl,
+						},
+					}))
+				} else if appmsg.Type == "33" || appmsg.Type == "36" {
+					xml = fmt.Sprintf(WeAppXmlTemp,
+						appmsg.Attributions.Appid,
+						appmsg.Attributions.Sdkver,
+						appmsg.Title,
+						appmsg.Des,
+						appmsg.Action,
+						appmsg.Type,
+						appmsg.ShowType,
+						appmsg.SoundType,
+						appmsg.MediaTagName,
+						appmsg.MessageExt,
+						appmsg.MessageAction,
+						appmsg.Content,
+						appmsg.ContentAttr,
+						appmsg.Url,
+						appmsg.LowUrl,
+						appmsg.DataUrl,
+						appmsg.LowDataUrl,
+						appmsg.AppAttach.TotalLen,
+						appmsg.AppAttach.CdnThumbUrl,
+						appmsg.AppAttach.CdnThumbMd5,
+						appmsg.AppAttach.CdnThumbLength,
+						appmsg.AppAttach.CdnThumbWidth,
+						appmsg.AppAttach.CdnThumbHeight,
+						appmsg.AppAttach.CdnThumbAeskey,
+						appmsg.AppAttach.Aeskey,
+						appmsg.AppAttach.EncryVer,
+						appmsg.AppAttach.FileKey,
+						appmsg.ExtInfo,
+						appmsg.SourceUserName,
+						appmsg.SourceDisplayName,
+						appmsg.ThumbUrl,
+						appmsg.Md5,
+						appmsg.StatExtStr,
+						appmsg.WeAppInfo.UserName,
+						appmsg.WeAppInfo.AppId,
+						appmsg.WeAppInfo.Type,
+						appmsg.WeAppInfo.Version,
+						appmsg.WeAppInfo.WeAppIconUrl,
+						appmsg.WeAppInfo.PagePath,
+						appmsg.WeAppInfo.ShareId,
+						appmsg.WeAppInfo.AppServiceType)
+
+					xml = strings.Replace(xml, "\n", "", -1)
+					//bot.Info("xml\n%s\n", xml)
+				}
+			} else if len(msg.Emoji.Attributions.FromUserName) > 0 {
+				emoji := msg.Emoji
+				bot.Info("send emoji NOT SUPPORT %v", emoji)
+				//emojiattr := emoji.Attributions
+
+				// xml = fmt.Sprintf(WeEmojiXmlTemp,
+				// 	bot.Login,
+				// 	toUserName,
+				// 	emojiattr.Type,
+				// 	emojiattr.IdBuffer,
+				// 	emojiattr.Md5,
+				// 	emojiattr.Len,
+				// 	emojiattr.ProductId,
+				// 	emojiattr.AndroidMd5,
+				// 	emojiattr.AndroidLen,
+				// 	emojiattr.S60V3Md5,
+				// 	emojiattr.S60V3Len,
+				// 	emojiattr.S60v5Md5,
+				// 	emojiattr.S60v5Len,
+				// 	emojiattr.CdnUrl,
+				// 	emojiattr.DesignerId,
+				// 	emojiattr.ThumbUrl,
+				// 	emojiattr.EncryptUrl,
+				// 	emojiattr.AesKey,
+				// 	emojiattr.ExternUrl,
+				// 	emojiattr.ExternMd5,
+				// 	emojiattr.Width,
+				// 	emojiattr.Height,
+				// 	emojiattr.TpUrl,
+				// 	emojiattr.TpAuthKey,
+				// 	emojiattr.AttachedText,
+				// 	emojiattr.AttachedTextColor,
+				// 	emojiattr.LenSid)
+				// xml = strings.Replace(xml, "\n", " ", -1)
+				// bot.Info("emoji xml\n%s\n", xml)
+			}
+
+			if len(xml) > 0 {
+				o.SendAction(bot, arId, SendAppMessage, o.ToJson(map[string]interface{}{
+					"toUserName": toUserName,
+					"xml":        xml,
+				}))
+			}
+
+		default:
+			bot.Info("Action unknown SendMessage %s %T \n%v \n", toUserName, content, content)
+		}
 	} else {
 		o.Err = fmt.Errorf("c[%s] not support %s", bot.ClientType, SendTextMessage)
+	}
+
+	return o.Err
+}
+
+func (bot *ChatBot) SendImageResourceMessage(arId string, body string) error {
+	o := &ErrorHandler{}
+
+	if bot.ClientType == WECHATBOT {
+		bodym := o.FromJson(body)
+		o.FromMapString("toUserName", bodym, "actionbody", false, "")
+		o.FromMapString("imageId", bodym, "actionbody", false, "")
+
+		if o.Err != nil {
+			return o.Err
+		}
+
+		o.SendAction(bot, arId, SendImageResourceMessage, body)
+	} else {
+		o.Err = fmt.Errorf("c[%s] not support %s", bot.ClientType, SendImageResourceMessage)
 	}
 
 	return o.Err
